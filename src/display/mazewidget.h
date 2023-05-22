@@ -7,67 +7,106 @@
 #include <QWidget>
 #include <QPaintEvent>
 #include <QPainter>
+#include <QTimer>
+#include <QEventLoop>
+#include <QCoreApplication>
 
 #include <iostream>
+#include <QTime>
+
 using namespace std;
 
 class MazeWidget : public QWidget {
 public:
+    void startDelay() {
+        // Start the timer with the specified delay time
+        timer->start(delayTime);
+    }
+
     MazeSolver* mazeSolver;
+    int** cells;
+    QRect** rects;
 
     MazeWidget(int gridSize, int frameSize, QWidget *parent = nullptr) :
         gridSize(gridSize), frameSize(frameSize), QWidget(parent) {
+
+        timer = new QTimer(this);
+        QObject::connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+        timer->start(50);
 
         this->cellUnit = frameSize / gridSize;
 
         this->mazeGenerator = new MazeGenerator(gridSize);
         this->mazeGenerator->generate();
-        this->mazeGenerator->print_adj();
+        //this->mazeGenerator->print_adj();
 
         this->mazeSolver = new MazeSolver(this->mazeGenerator->getAdj(), gridSize);
-        cout << "GRID SIZE: " << this->mazeGenerator->getSize() << endl;
-        //this->mazeSolver->solve(1);
+
+        //create grid for cells
+        this->cells = new int*[gridSize];
+        for (int i = 0; i < gridSize; i++) {
+            this->cells[i] = new int[gridSize];
+        }
+
+        for (int i=0; i<gridSize; i++) {
+            for (int j=0; j<gridSize; j++) {
+                this->cells[i][j] = 0;
+            }
+        }
+        this->cells[0][0] = 1;
+        this->cells[gridSize-1][gridSize-1] = 2;
+
+
+        this->rects = new QRect*[gridSize];
+        for (int i = 0; i < gridSize; i++) {
+            this->rects[i] = new QRect[gridSize];
+        }
+
+        for (int i=0; i<gridSize; i++) {
+            for (int j=0; j<gridSize; j++) {
+                this->rects[i][j] = QRect(j*this->cellUnit+1, i*this->cellUnit+1, this->cellUnit-2, this->cellUnit-2);
+            }
+        }
     }
 
     void setGridSize(int size) { this->gridSize = size; };
     int getGridSize() { return this->gridSize; };
 
+    void delay()
+    {
+        QTime dieTime= QTime::currentTime().addSecs(1);
+        while (QTime::currentTime() < dieTime) {
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+            cout << "waiting..." << endl;
+        }
+    }
+
+public slots:
+    void updateDelayed() {
+        //QTimer::singleShot(1000, this, )
+        //QTimer::singleShot(delayTime, this, &MazeWidget::update);
+        //cout << "invoked update... " << endl;
+        update();
+        //delay();
+        //timer->stop();
+    }
+
 protected:
     void paintEvent(QPaintEvent *event) override {
         QWidget::paintEvent(event);
-
         QPainter painter(this);
 
-        // Set the pen properties for drawing the lines
-        QPen pen(Qt::white);
-        pen.setWidth(2);
-        painter.setPen(pen);
+        painter.setPen(QPen(Qt::white, 0));
+        painter.setBrush(QBrush(Qt::black));
 
-        // Draw horizontal lines
-        int y = this->cellUnit;
-        for (int i = 0; i < this->gridSize; ++i) {
-            painter.drawLine(0, y, width(), y);
-            y += this->cellUnit;
+        for (int i=0; i<gridSize; i++) {
+            for (int j=0; j<gridSize; j++) {
+                painter.setBrush(mapColor(cells[i][j]));
+                painter.drawRect(this->rects[i][j]);
+            }
         }
 
-        // Draw vertical lines
-        int x = this->cellUnit;
-        for (int i = 0; i < this->gridSize; ++i) {
-            painter.drawLine(x, 0, x, height());
-            x += this->cellUnit;
-        }
-
-        // Fill start and end of maze
-        painter.fillRect(2, 2, this->cellUnit-4, this->cellUnit-4, QColor(20, 120, 20));
-        painter.fillRect((this->gridSize-1) * this->cellUnit + 2, (this->gridSize-1) * this->cellUnit + 2,
-                         this->cellUnit - 4, this->cellUnit - 4, QColor(120, 20, 20));
-
-
-        QPen pen2(Qt::black);
-        pen2.setWidth(2);
-        painter.setPen(pen2);
-
-
+        painter.setPen(QPen(Qt::black, 4));
         int n_vertices = this->gridSize * this->gridSize;
         int n1, m1, n2, m2, n_max, m_max;
 
@@ -103,6 +142,24 @@ private:
     int frameSize;
     int cellUnit;
 
+    QTimer* timer;
+    int delayTime;
+
     MazeGenerator* mazeGenerator;
+
+    QColor mapColor(int i) {
+        switch (i) {
+            case 0:
+                return Qt::black;
+            case 1:
+                return QColor(20, 120, 20);
+            case 2:
+                return QColor(120, 20, 20);
+            case 3:
+                return Qt::blue;
+            case 4:
+                return Qt::red;
+        }
+    }
 };
 #endif //MAZEWIDGET_H

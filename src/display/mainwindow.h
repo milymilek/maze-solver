@@ -6,6 +6,7 @@
 #include <QMainWindow>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QStackedWidget>
 
 class MainWindow : public QMainWindow {
 Q_OBJECT
@@ -17,12 +18,19 @@ public:
 
 public slots:
     void handleSolveClick(int alg) {
-        this->mazeWidget->mazeSolver->solve(alg);
+        MazeWidget* widget = this->mazeWidget;
+
+        this->mazeWidget->mazeSolver->solve(
+                alg,
+                this->mazeWidget->cells,
+                [widget]() {widget->startDelay();}
+        );
     }
 
 private:
     int gridSize;
     int frameSize;
+    int cellUnit;
 
     QWidget *centralWidget;
     QLineEdit *sizeLineEdit;

@@ -17,12 +17,19 @@ find_package(Qt6 COMPONENTS
   Widgets
   REQUIRED)
 
+include_directories(
+    display
+    maze/generator
+    maze/solver
+)
+
 add_executable(maze_solver
     src/main.cpp
     src/display/mainwindow.h
     src/display/mainwindow.cpp
     src/display/mazewidget.h
     src/maze/generator/generator.cpp
+    src/maze/solver/solver.cpp
 )
 
 target_link_libraries(maze_solver

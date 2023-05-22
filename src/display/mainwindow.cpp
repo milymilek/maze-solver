@@ -1,8 +1,6 @@
 #include "mainwindow.h"
-#include "mazewidget.h"
 #include <QGridLayout>
 #include <QLabel>
-#include <QPainter>
 
 #include <iostream>
 
@@ -17,6 +15,7 @@ int MainWindow::getGridSize() {
 
 MainWindow::MainWindow(int gridSize, int frameSize, QWidget *parent) :
     gridSize(gridSize), frameSize(frameSize), QMainWindow(parent) {
+    this->cellUnit = frameSize / gridSize;
     centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
 
@@ -28,11 +27,10 @@ MazeWidget* MainWindow::createMazeWidget() {
 
     mazeWidget->setGridSize(this->gridSize);
     mazeWidget->setFixedSize(this->frameSize, this->frameSize);
-    mazeWidget->setStyleSheet("background-color: black; border: 2px solid white;");
+    mazeWidget->setStyleSheet("background-color: gray;");
 
     return mazeWidget;
 }
-
 
 void MainWindow::createLayout() {
     QGridLayout *gridLayout = new QGridLayout(centralWidget);
@@ -49,7 +47,6 @@ void MainWindow::createLayout() {
     connect(solveButton, &QPushButton::clicked, [alg_choice, this]() {
         handleSolveClick(alg_choice);
     });
-
 
     gridLayout->addWidget(mazeWidget, 0, 0, 1, 2);
     gridLayout->addWidget(sizeLabel, 1, 0);

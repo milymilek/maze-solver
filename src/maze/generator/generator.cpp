@@ -1,7 +1,7 @@
 #include <iostream>
 #include <random>
-#include <stdlib.h>     /* srand, rand */
-#include <time.h>       /* time */
+#include <stdlib.h>
+#include <time.h>
 #include <vector>
 #include <algorithm>
 
@@ -32,7 +32,8 @@ public:
     MazeGenerator(int size) : size(size) {
         this->n_vertices = this->size * this->size;
         this->adjMatrix = this->init_matrix(this->n_vertices);
-        srand(0);
+        //srand(0);
+        srand(time(NULL));
     }
 
 
@@ -49,7 +50,6 @@ public:
     }
 
     static bool isEdge(int n, int v, int size) {
-        //cout << "n: " << n << " v: " << v << " size: " << size << " 1st: " << ((!v%size) && (v-1)==n) << " 2nd: " << ((!((v+1)%size)) && (v+1)==n) << endl;
         return (n < 0 || n >= size*size || (!(v%size) && (v-1)==n) || (!((v+1)%size) && (v+1)==n));
     }
 
@@ -63,8 +63,8 @@ public:
         }), neighbors.end());
 
         random_device rd;
-        //mt19937 generator(rd());
-        mt19937 generator(42);
+        mt19937 generator(rd());
+        //mt19937 generator(42);
         shuffle(neighbors.begin(), neighbors.end(), generator);
 
         return neighbors;
